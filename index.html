@@ -48,7 +48,18 @@
         }
         li { margin-bottom: 6px; }
         a { color: #cc1f2e; }
+        .email-link { font-weight: bold; }
     </style>
+    <script>
+        function e(id) {
+            var u = 'laddothisapp', d = 'gmail.com';
+            var el = document.getElementById(id);
+            el.innerHTML = '<a href="ma' + 'ilto:' + u + '@' + d + '">' + u + '@' + d + '</a>';
+        }
+        window.addEventListener('DOMContentLoaded', function() {
+            e('email1'); e('email2'); e('email3');
+        });
+    </script>
 </head>
 <body>
     <div class="container">
@@ -57,7 +68,7 @@
 
         <h2>Contact Us</h2>
         <p>For questions, feedback, or any issues with the app, reach out to us at:</p>
-        <p><strong><a href="mailto:laddothisapp@gmail.com">laddothisapp@gmail.com</a></strong></p>
+        <p class="email-link" id="email1"></p>
         <p>We typically respond within 24 hours.</p>
 
         <h2>Frequently Asked Questions</h2>
@@ -75,7 +86,7 @@
         <p>If you had iCloud backup enabled before deleting, your data will be restored when you reinstall. Otherwise, locally stored data is permanently removed when the app is deleted.</p>
 
         <h3 style="font-size:16px; margin-top:20px; margin-bottom:8px;">How do I report a bug?</h3>
-        <p>Email us at <a href="mailto:laddothisapp@gmail.com">laddothisapp@gmail.com</a> with a description of the issue and your device model. Screenshots are helpful!</p>
+        <p>Email us at <span class="email-link" id="email2"></span> with a description of the issue and your device model. Screenshots are helpful!</p>
 
         <hr style="border: none; border-top: 1px solid #e8d5c4; margin: 40px 0;">
 
@@ -153,7 +164,7 @@
 
         <h2>13. Contact Us</h2>
         <p>If you have questions about this privacy policy, please contact us at:</p>
-        <p><strong>laddothisapp@gmail.com</strong></p>
+        <p class="email-link" id="email3"></p>
     </div>
 </body>
 </html>
