@@ -64,6 +64,19 @@ COMMUNITIES = {
 }
 GROUP_ORDER = ["Punjabi", "Pakistani and Muslim", "Hindu", "Jain, Parsi and Christian"]
 
+# community raw value -> artwork key in assets/img/art (made from the app's e-card art by tools/prep_images.sh).
+COMMUNITY_ART = {
+    "Sikh Punjabi": "anand-karaj", "Hindu Punjabi": "hindu-punjabi", "Punjabi Muslim": "pakistani-mehndi",
+    "Muhajir": "nikah", "Sindhi Muslim": "sindhi-nikah", "Saraiki": "pakistani-mehndi", "Pashtun": "nikah",
+    "Balochi": "sindhi-nikah", "North Indian Muslim": "nikah", "Kashmiri Muslim": "sindhi-nikah", "Ismaili": "nikah",
+    "Gujarati Hindu": "garba", "Tamil Hindu": "south-indian", "Telugu Hindu": "south-indian",
+    "Bengali Hindu": "bengali", "Maharashtrian Hindu": "marathi", "Kerala Hindu": "south-indian",
+    "Kannada Hindu": "south-indian", "Rajasthani Marwari": "palace-lake", "Sindhi Hindu": "sangeet",
+    "Kashmiri Pandit": "illustrated", "Odia Hindu": "bengali", "Assamese Hindu": "bengali",
+    "Indo-Caribbean Hindu": "indo-caribbean", "Jain": "illustrated", "Parsi": "illustrated-night",
+    "Kerala Christian": "white-gown", "Goan Catholic": "first-dance",
+}
+
 # Swift file prefix -> community raw value (file names drop spaces and the "Pakistani" suffix varies).
 FILE_TO_COMMUNITY = {
     "SikhPunjabi": "Sikh Punjabi", "HinduPunjabi": "Hindu Punjabi", "PunjabiMuslimPakistani": "Punjabi Muslim",
@@ -221,18 +234,29 @@ def paras(text):
     return "".join(f"<p>{e(p.strip())}</p>" for p in text.split("\n") if p.strip())
 
 
-def page(title, description, path, body, jsonld, active):
+def art(key, thumb=False):
+    return f'{BASE}/assets/img/art/{key}{"-thumb" if thumb else ""}.webp'
+
+
+def badge():
+    return (f'<a class="badge" href="{APP_URL_TRACKED}"><img src="{BASE}/assets/img/app-store-badge.svg" '
+            f'alt="Download on the App Store" width="162" height="54"></a>')
+
+
+def page(title, description, path, body, jsonld, active, og_key):
     url = f"{SITE}{path}"
     ld = "\n".join(f'<script type="application/ld+json">{json.dumps(x, ensure_ascii=False)}</script>' for x in jsonld)
     current = ' aria-current="page"'
     nav = "".join(
         f'<a href="{BASE}{href}"{current if key == active else ""}>{label}</a>'
-        for key, href, label in [("guides", "/guides/", "Ceremony guides"), ("support", "/", "Support &amp; Privacy")])
+        for key, href, label in [("guides", "/guides/", '<span class="long-label">Ceremony guides</span><span class="short-label">Guides</span>'), ("support", "/#support", "Support"),
+                                 ("privacy", "/#privacy", "Privacy")])
     return f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
 <title>{e(title)}</title>
 <meta name="description" content="{e(description)}">
 <link rel="canonical" href="{url}">
@@ -242,20 +266,31 @@ def page(title, description, path, body, jsonld, active):
 <meta property="og:title" content="{e(title)}">
 <meta property="og:description" content="{e(description)}">
 <meta property="og:url" content="{url}">
+<meta property="og:image" content="{SITE}/assets/img/og/{og_key}.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" sizes="32x32" href="{BASE}/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="{BASE}/assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
 <link rel="stylesheet" href="{BASE}/assets/site.css">
 {ld}
 </head>
 <body>
-<header class="site"><div class="wrap">
-  <a class="brand" href="{BASE}/guides/">LaddoThis</a>
-  <nav aria-label="Site">{nav}</nav>
-</div></header>
-<main class="wrap">
+<header class="site">
+  <div class="wrap bar">
+    <a class="brand" href="{BASE}/"><img src="{BASE}/assets/img/ladoo-64.png" alt="" width="34" height="34">LaddoThis</a>
+    <nav aria-label="Site">{nav}<a class="pill" href="{APP_URL_TRACKED}">Get the app</a></nav>
+  </div>
+  <div class="toran" aria-hidden="true"></div>
+</header>
+<main>
 {body}
 </main>
 <footer class="site"><div class="wrap">
-  <p>LaddoThis is an iPhone app with ready-made ceremony checklists for 28 South Asian communities. <a href="{APP_URL_TRACKED}">Get it on the App Store</a>.</p>
-  <p><a href="{BASE}/guides/">All ceremony guides</a> &middot; <a href="{BASE}/">Support &amp; Privacy</a></p>
+  <a class="brand" href="{BASE}/"><img src="{BASE}/assets/img/ladoo-64.png" alt="" width="28" height="28">LaddoThis</a>
+  <p>Ceremony-by-ceremony wedding checklists for 28 South Asian communities. Free on iPhone.</p>
+  <p class="links"><a href="{BASE}/guides/">Ceremony guides</a><a href="{BASE}/#support">Support</a><a href="{BASE}/#privacy">Privacy policy</a><a href="{APP_URL_TRACKED}">App Store</a></p>
 </div></footer>
 </body>
 </html>
@@ -263,10 +298,13 @@ def page(title, description, path, body, jsonld, active):
 
 
 def app_box(name, n_events, n_tasks, n_things):
-    return f"""<aside class="app">
-  <h2>Plan every {e(name)} ceremony in one app</h2>
-  <p><strong>LaddoThis</strong> turns each of these {n_events} ceremonies into a ready-made checklist: {n_tasks} tasks in all, {n_things} of them things to buy or prepare, split between the bride&rsquo;s side and the groom&rsquo;s side, with reminders for when each one should start. It also has a budget tracker, vendor contacts, a gift tracker and e-card invitations. Free to download on iPhone; one purchase unlocks everything and covers the family through Apple Family Sharing.</p>
-  <p><a class="button" href="{APP_URL_TRACKED}">Download LaddoThis on the App Store</a></p>
+    return f"""<aside class="cta">
+  <div>
+    <h2>Plan every {e(name)} ceremony in one app</h2>
+    <p><strong>LaddoThis</strong> turns each of these {n_events} ceremonies into a ready-made checklist: {n_tasks} tasks in all, {n_things} of them things to buy or prepare, split between the bride&rsquo;s side and the groom&rsquo;s side, with reminders for when each one should start. It also has a budget tracker, vendor contacts, a gift tracker and e-card invitations. Free to download on iPhone; one purchase unlocks everything and covers the family through Apple Family Sharing.</p>
+    {badge()}
+  </div>
+  <img class="shot" src="{BASE}/assets/img/shots/ceremony.webp" alt="LaddoThis ceremony checklist screen" width="210" height="455" loading="lazy">
 </aside>"""
 
 
@@ -283,26 +321,46 @@ def community_page(raw, events):
     def local(ev):
         return f' <span class="local" lang="und">{e(ev["local"])}</span>' if ev["local"] else ""
 
-    rows = "".join(
-        f'<tr><td><a href="#c{i}">{e(ev["name"])}</a>{local(ev)}</td>'
-        f'<td>{e(ev["when"])}</td><td>{e(ev["short"])}</td></tr>'
-        for i, ev in enumerate(events, 1))
+    # The period label shows once, at the first ceremony of each period.
+    steps, last_when = [], None
+    for i, ev in enumerate(events, 1):
+        when = f'<span class="when">{e(ev["when"])}</span>' if ev["when"] and ev["when"] != last_when else ""
+        last_when = ev["when"] or last_when
+        steps.append(f'<li>{when}<a href="#c{i}">{e(ev["name"])}{local(ev)}</a>'
+                     f'<span class="desc">{e(ev["short"])}</span></li>')
     sections = []
     for i, ev in enumerate(events, 1):
-        when = f'<p class="when">{e(ev["when"])}</p>' if ev["when"] else ""
-        sig = f'<h3>Why it matters</h3>{paras(ev["significance"])}' if ev["significance"] else ""
+        when = f'<p><span class="when">{e(ev["when"])}</span></p>' if ev["when"] else ""
+        sig = f'<div class="why"><h3>Why it matters</h3>{paras(ev["significance"])}</div>' if ev["significance"] else ""
         things = f', {ev["things"]} of them things to buy or prepare' if ev["things"] else ""
         checklist = (f'<p class="inapp">In LaddoThis: a {e(ev["name"])} checklist with {ev["tasks"]} tasks{things}.</p>'
                      if ev["tasks"] else "")
-        sections.append(f'<section id="c{i}"><h2>{i}. {e(ev["name"])}{local(ev)}</h2>{when}'
-                        f'<p class="short">{e(ev["short"])}</p>{paras(ev["description"])}{sig}{checklist}</section>')
-    body = f"""<div class="crumbs"><a href="{BASE}/guides/">Ceremony guides</a> &rsaquo; {e(name)}</div>
-<h1>{e(name)} wedding ceremonies, in order</h1>
-<div class="answer"><p>A {e(name)} wedding usually moves through {len(events)} ceremonies: {e(seq)}. Below is each one in order, when it usually happens and what it means. Customs vary between families and regions, so treat this as the common sequence, not a rule.</p></div>
+        sections.append(f'<section id="c{i}"><div class="num" aria-hidden="true">{i}</div><div>'
+                        f'<h2>{e(ev["name"])}{local(ev)}</h2>{when}'
+                        f'<p class="short">{e(ev["short"])}</p>{paras(ev["description"])}{sig}{checklist}</div></section>')
+    group = COMMUNITIES[raw][2]
+    related = "".join(f'<li><a href="{BASE}/guides/{s}-wedding-ceremonies/">{e(n)}</a></li>'
+                      for r, (n, s, g) in COMMUNITIES.items() if g == group and r != raw)
+    body = f"""<div class="page-hero"><div class="wrap hero-grid">
+  <div>
+    <div class="crumbs"><a href="{BASE}/guides/">Ceremony guides</a> &rsaquo; {e(name)}</div>
+    <h1>{e(name)} wedding ceremonies, in order</h1>
+    <div class="answer"><p>A {e(name)} wedding usually moves through {len(events)} ceremonies: {e(seq)}. Below is each one in order, when it usually happens and what it means. Customs vary between families and regions, so treat this as the common sequence, not a rule.</p></div>
+    <p><span class="chip">{len(events)} ceremonies</span><span class="chip">{n_tasks} checklist tasks in the app</span></p>
+  </div>
+  <figure class="hero-art"><img src="{art(COMMUNITY_ART[raw])}" alt="" width="300" height="375"></figure>
+</div></div>
+<div class="wrap narrow">
+<div class="glance">
 <h2>At a glance</h2>
-<div class="table-scroll"><table><thead><tr><th>Ceremony</th><th>When</th><th>What it is</th></tr></thead><tbody>{rows}</tbody></table></div>
+<ol class="timeline">{"".join(steps)}</ol>
+</div>
+<div class="ceremonies">
 {"".join(sections)}
+</div>
 {app_box(name, len(events), n_tasks, n_things)}
+<div class="related"><h2>More {e(group)} ceremony guides</h2><ul>{related}</ul></div>
+</div>
 """
     faq = [
         (f"What is the order of {name} wedding ceremonies?", f"The usual sequence is {seq}. Exact customs vary by family and region."),
@@ -321,7 +379,7 @@ def community_page(raw, events):
         {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]},
     ]
-    return path, title, description, page(title, description, path, body, jsonld, "guides")
+    return path, title, description, page(title, description, path, body, jsonld, "guides", COMMUNITY_ART[raw])
 
 
 def hub_page(data):
@@ -337,18 +395,30 @@ def hub_page(data):
             if grp != g:
                 continue
             evs = data[raw]
-            preview = e(", ".join(ev["name"] for ev in evs[:6])) + (", &hellip;" if len(evs) > 6 else "")
-            items.append(f'<li><a href="{BASE}/guides/{slug}-wedding-ceremonies/">{e(name)}</a> '
-                         f'<span class="count">{len(evs)} ceremonies</span><br><span class="preview">{preview}</span></li>')
-        groups.append(f"<h2>{e(g)}</h2><ul class=\"communities\">{''.join(items)}</ul>")
-    body = f"""<h1>Wedding ceremonies by community</h1>
-<div class="answer"><p>South Asian weddings are a sequence of ceremonies, and the sequence depends on the family&rsquo;s community: a Sikh Punjabi wedding runs from Roka to Doli, a Pakistani one from Mangni through Dholki, Mayun, Mehndi, Baraat and Nikah to Walima. These guides list every ceremony in order for {len(data)} traditions ({total_events} ceremonies in all), with when each happens and what it means.</p></div>
+            preview = e(", ".join(ev["name"] for ev in evs[:5])) + (", &hellip;" if len(evs) > 5 else "")
+            items.append(f'<li><a class="community" href="{BASE}/guides/{slug}-wedding-ceremonies/">'
+                         f'<img src="{art(COMMUNITY_ART[raw], thumb=True)}" alt="" width="72" height="90" loading="lazy">'
+                         f'<span><b>{e(name)}</b><span class="count">{len(evs)} ceremonies</span>'
+                         f'<span class="preview">{preview}</span></span></a></li>')
+        groups.append(f'<div class="group"><h2>{e(g)}</h2><ul class="communities">{"".join(items)}</ul></div>')
+    body = f"""<div class="page-hero"><div class="wrap hero-grid">
+  <div>
+    <h1>Wedding ceremonies by community</h1>
+    <div class="answer"><p>South Asian weddings are a sequence of ceremonies, and the sequence depends on the family&rsquo;s community: a Sikh Punjabi wedding runs from Roka to Doli, a Pakistani one from Mangni through Dholki, Mayun, Mehndi, Baraat and Nikah to Walima. These guides list every ceremony in order for {len(data)} traditions ({total_events} ceremonies in all), with when each happens and what it means.</p></div>
+  </div>
+  <div class="hero-collage" aria-hidden="true"><img src="{art("jaggo")}" alt=""><img src="{art("garba")}" alt=""></div>
+</div></div>
+<div class="wrap">
 {''.join(groups)}
-<aside class="app">
-  <h2>About LaddoThis</h2>
-  <p>LaddoThis is an iPhone app for planning South Asian weddings. Pick your community and every ceremony comes as a ready-made checklist, split between the bride&rsquo;s side and the groom&rsquo;s side, with reminders for when to start. It also includes a budget tracker with community-typical categories, vendor contacts, a gift tracker, a photo inspiration board and e-card invitations. Free to download; a one-time purchase unlocks everything and Apple Family Sharing covers up to five family members. Your data stays on your device.</p>
-  <p><a class="button" href="{APP_URL_TRACKED}">Download LaddoThis on the App Store</a></p>
+<aside class="cta">
+  <div>
+    <h2>About LaddoThis</h2>
+    <p>LaddoThis is an iPhone app for planning South Asian weddings. Pick your community and every ceremony comes as a ready-made checklist, split between the bride&rsquo;s side and the groom&rsquo;s side, with reminders for when to start. It also includes a budget tracker with community-typical categories, vendor contacts, a gift tracker, a photo inspiration board and e-card invitations. Free to download; a one-time purchase unlocks everything and Apple Family Sharing covers up to five family members. Your data stays on your device.</p>
+    {badge()}
+  </div>
+  <img class="shot" src="{BASE}/assets/img/shots/planner.webp" alt="LaddoThis wedding timeline screen" width="210" height="455" loading="lazy">
 </aside>
+</div>
 """
     jsonld = [
         {"@context": "https://schema.org", "@type": "MobileApplication", "name": "LaddoThis: Indian Weddings",
@@ -357,7 +427,7 @@ def hub_page(data):
          "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}},
         {"@context": "https://schema.org", "@type": "CollectionPage", "name": title, "description": description, "url": f"{SITE}{path}"},
     ]
-    return path, title, description, page(title, description, path, body, jsonld, "guides")
+    return path, title, description, page(title, description, path, body, jsonld, "guides", "jaggo")
 
 
 def llms_txt(data, guides):
