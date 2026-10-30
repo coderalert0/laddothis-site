@@ -1,19 +1,29 @@
 #!/bin/bash
-# Build the site's images from the app's own artwork and App Store screenshots.
+# Build the site's images from the app's own artwork and screens.
 #
 #   assets/img/art/<key>.webp        800x1000 portrait (bottom 4:5 of the e-card art)
 #   assets/img/art/<key>-thumb.webp  160x200
 #   assets/img/og/<key>.jpg          1200x630 share image
-#   assets/img/shots/<name>.webp     iPhone App Store screenshots, 600 wide
+#   assets/img/screens/<name>.webp   app screens, 600 wide (the page draws the phone frame)
 #   assets/img/ladoo-*.png           brand mark and icons
 #
-# Usage: tools/prep_images.sh [path/to/laddo-this]   (default ~/laddo-this). Needs ImageMagick 7.
+# Screens are raw iPhone 17 Pro simulator screenshots (1206x2622, no captions or
+# backgrounds), taken with the app launched in demo mode:
+#   xcrun simctl status_bar <udid> override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
+#   xcrun simctl launch <udid> com.laddothis.app -uitesting -resetData -community "Sikh Punjabi" -side Bride \
+#     -brideName Simran -groomName Arjun -weddingDate <~90 days out> -premium -marketingDemo -mockWeather
+# then, inside the app: total budget set to $175,000 (the demo default of $50,000 shows every
+# category over budget) and the Anand Karaj e-card given parents "Harjit & Manjit Gill" and venue
+# "Gurdwara Sahib, Sacramento, CA". Save them as timeline, checklist (Maiyan), checklists,
+# ecard, budget and gifts .png in SCREENS_SRC.
+#
+# Usage: [SCREENS_SRC=dir] tools/prep_images.sh [path/to/laddo-this]   (default ~/laddo-this). Needs ImageMagick 7.
 set -euo pipefail
 APP="${1:-$HOME/laddo-this}"
 XC="$APP/LaddoThis/Assets.xcassets"
 SITE="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$SITE/assets/img"
-mkdir -p "$OUT/art" "$OUT/og" "$OUT/shots"
+mkdir -p "$OUT/art" "$OUT/og"
 
 # site key -> e-card image set in the app
 ART=(
@@ -45,20 +55,12 @@ for pair in "${ART[@]}"; do
   magick "$src" -gravity south -crop 1024x538+0+40 +repage -resize 1200x630 -quality 78 "$OUT/og/$key.jpg"
 done
 
-# iPhone screenshots from the App Store listing (the app's own marketing images).
-SHOTS=(
-  "planner:PurpleSource211/v4/0e/e6/6a/0ee66ab5-4cc2-6825-833d-878314adaee5/complete_wedding_planner.png"
-  "culture:PurpleSource221/v4/68/64/f8/6864f83b-602f-1f49-1cb8-8e4e3d6221a9/customized_culture.png"
-  "ceremony:PurpleSource221/v4/8f/66/0c/8f660c3f-20cc-fcaf-aaa3-2fd47f33e314/ceremony_culture.png"
-  "ecards:PurpleSource211/v4/89/62/01/896201ae-b294-f98d-41a8-01adba33fc0e/e-card_generator.png"
-  "moodboard:PurpleSource221/v4/ea/23/24/ea232473-fc73-5755-8af4-a9de35810bde/mood_board.png"
-  "budget:PurpleSource221/v4/4e/d5/c3/4ed5c366-144f-e5a3-cc60-f87865ac2afb/budget.png"
-  "playlist:PurpleSource211/v4/c1/bd/ca/c1bdca1a-bb39-e253-4f21-f5590ab5dd59/playlist.png"
-)
-for pair in "${SHOTS[@]}"; do
-  name="${pair%%:*}"; path="${pair#*:}"
-  curl -sf "https://is1-ssl.mzstatic.com/image/thumb/$path/600x1300bb.webp" -o "$OUT/shots/$name.webp"
-done
+if [ -n "${SCREENS_SRC:-}" ]; then
+  mkdir -p "$OUT/screens"
+  for f in "$SCREENS_SRC"/*.png; do
+    magick "$f" -resize 600x -quality 80 "$OUT/screens/$(basename "${f%.png}").webp"
+  done
+fi
 
 LADOO="$XC/LadooOnboarding.imageset/ladoo.png"
 magick "$LADOO" -trim +repage -resize 64x64 -background none -gravity center -extent 64x64 "$OUT/ladoo-64.png"

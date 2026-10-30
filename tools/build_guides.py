@@ -307,7 +307,7 @@ def app_box(name, n_events, n_tasks, n_things):
     <p><strong>LaddoThis</strong> turns each of these {n_events} ceremonies into a ready-made checklist: {n_tasks} tasks in all, {n_things} of them things to buy or prepare, split between the bride&rsquo;s side and the groom&rsquo;s side, with reminders for when each one should start. It also has a budget tracker, vendor contacts, a gift tracker and e-card invitations. Free to download on iPhone; one purchase unlocks everything and covers the family through Apple Family Sharing.</p>
     {badge()}
   </div>
-  <img class="shot" src="{BASE}/assets/img/shots/ceremony.webp" alt="LaddoThis ceremony checklist screen" width="210" height="455" loading="lazy">
+  <div class="phone"><img src="{BASE}/assets/img/screens/checklist.webp" alt="A ceremony checklist in LaddoThis" width="600" height="1304" loading="lazy"></div>
 </aside>"""
 
 
@@ -419,7 +419,7 @@ def hub_page(data):
     <p>LaddoThis is an iPhone app for planning South Asian weddings. Pick your community and every ceremony comes as a ready-made checklist, split between the bride&rsquo;s side and the groom&rsquo;s side, with reminders for when to start. It also includes a budget tracker with community-typical categories, vendor contacts, a gift tracker, a photo inspiration board and e-card invitations. Free to download; a one-time purchase unlocks everything and Apple Family Sharing covers up to five family members. Your data stays on your device.</p>
     {badge()}
   </div>
-  <img class="shot" src="{BASE}/assets/img/shots/planner.webp" alt="LaddoThis wedding timeline screen" width="210" height="455" loading="lazy">
+  <div class="phone"><img src="{BASE}/assets/img/screens/timeline.webp" alt="The LaddoThis wedding timeline" width="600" height="1304" loading="lazy"></div>
 </aside>
 </div>
 """
