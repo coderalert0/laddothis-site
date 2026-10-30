@@ -14,6 +14,7 @@ Task lists stay in the app: pages show only how many tasks each checklist has.
 Usage: python3 tools/build_guides.py [path/to/laddo-this]   (default ~/laddo-this)
 """
 import datetime
+import hashlib
 import html
 import json
 import os
@@ -27,6 +28,8 @@ APP_URL = f"https://apps.apple.com/app/id{APP_ID}"
 # App Store campaign token so App Store Connect reports downloads from these pages.
 APP_URL_TRACKED = f"https://apps.apple.com/app/apple-store/id{APP_ID}?pt=128557981&ct=web-guides&mt=8"
 TODAY = datetime.date.today().isoformat()
+# Changes whenever site.css changes, so browsers never pair new pages with a cached old stylesheet.
+CSS_VERSION = hashlib.md5(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "site.css"), "rb").read()).hexdigest()[:8]
 
 # Events in the data that are planning aids, not ceremonies.
 NOT_CEREMONIES = {"Wedding Day Personal Kit", "Planning & Paperwork"}
@@ -273,7 +276,7 @@ def page(title, description, path, body, jsonld, active, og_key):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
-<link rel="stylesheet" href="{BASE}/assets/site.css">
+<link rel="stylesheet" href="{BASE}/assets/site.css?v={CSS_VERSION}">
 {ld}
 </head>
 <body>
@@ -477,6 +480,12 @@ def main():
     open(os.path.join(site, "guides", "index.html"), "w", encoding="utf-8").write(hub[3])
     open(os.path.join(site, "llms.txt"), "w", encoding="utf-8").write(llms_txt(data, guides))
     open(os.path.join(site, "sitemap.xml"), "w", encoding="utf-8").write(sitemap(["/", "/guides/"] + [g[0] for g in guides]))
+    # The home page is hand-written; keep its stylesheet link on the same version.
+    home = os.path.join(site, "index.html")
+    src = open(home, encoding="utf-8").read()
+    out = re.sub(r'assets/site\.css(\?v=\w+)?"', f'assets/site.css?v={CSS_VERSION}"', src)
+    if out != src:
+        open(home, "w", encoding="utf-8").write(out)
     print(f"{len(guides)} guides, {sum(len(v) for v in data.values())} ceremonies")
 
 

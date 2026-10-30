@@ -6,6 +6,7 @@
 - the sitemap and llms.txt list every guide, and nothing that doesn't exist
 - each guide's ceremony count matches the app data it was built from
 - no page publishes task text (only task counts)
+- the home page still carries the support contact and privacy policy
 
 Usage: python3 tools/check_site.py [path/to/laddo-this]
 Exits non-zero on the first category with failures.
@@ -33,7 +34,7 @@ def local_path(href):
         href = bg.BASE + href[len(bg.SITE):]
     if not href.startswith(bg.BASE + "/"):
         return None
-    rel = href[len(bg.BASE) + 1:].split("#")[0]
+    rel = href[len(bg.BASE) + 1:].split("#")[0].split("?")[0]
     path = os.path.join(SITE_DIR, rel)
     return os.path.join(path, "index.html") if rel == "" or rel.endswith("/") else path
 
@@ -81,6 +82,12 @@ def main():
         n = len(re.findall(r'<section id="c\d+">', open(p, encoding="utf-8").read()))
         if n != len(data[raw]):
             fail(f"{slug}: {n} ceremonies on the page, {len(data[raw])} in the app data")
+
+    # The home page is the app's Support URL and Privacy Policy URL in App Store Connect.
+    home = open(os.path.join(SITE_DIR, "index.html"), encoding="utf-8").read()
+    for marker in ('id="support"', 'id="email1"', 'id="privacy"', "Privacy Policy", "Last updated:", "13. Contact Us"):
+        if marker not in home:
+            fail(f"index.html: missing {marker!r} (support/privacy content App Store Connect links to)")
 
     listed = set(re.findall(r"<loc>([^<]+)</loc>", open(os.path.join(SITE_DIR, "sitemap.xml")).read()))
     llms = open(os.path.join(SITE_DIR, "llms.txt")).read()
