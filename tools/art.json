@@ -1,0 +1,21 @@
+{
+  "_comment": "Site artwork from the app's e-card image sets (1024x1536). top = highest point of the people (heads, raised hands, the jaggo pot) and x = their horizontal span, both in source pixels. tools/prep_images.sh crops thumbnails and share images from these, and build_guides.py uses top to keep heads in the phone-width header banner.",
+  "anand-karaj":       {"set": "ECardSikhPunjabiAnandKarajRed", "top": 1040, "x": [120, 900]},
+  "golden-temple":     {"set": "ECardSikhPunjabi",              "top": 960,  "x": [230, 840]},
+  "jaggo":             {"set": "ECardPunjabiJaggo",             "top": 820,  "x": [150, 910]},
+  "hindu-punjabi":     {"set": "ECardHinduPunjabiWedding",      "top": 1100, "x": [150, 990]},
+  "pakistani-mehndi":  {"set": "ECardPakistaniPunjabiMehndi",   "top": 700,  "x": [70, 990]},
+  "nikah":             {"set": "ECardPakistaniPunjabiNikah",    "top": 950,  "x": [210, 910]},
+  "sindhi-nikah":      {"set": "ECardSindhiMuslimNikah",        "top": 970,  "x": [70, 990]},
+  "white-gown":        {"set": "ECardPakistaniPunjabiWalima",   "top": 700,  "x": [250, 780]},
+  "garba":             {"set": "ECardGujaratiHinduSangeet",     "top": 840,  "x": [180, 910]},
+  "south-indian":      {"set": "ECardSouthIndianWedding",       "top": 990,  "x": [170, 920]},
+  "bengali":           {"set": "ECardBengaliHinduWedding",      "top": 900,  "x": [50, 1000]},
+  "marathi":           {"set": "ECardMaharashtriHinduWedding",  "top": 970,  "x": [100, 990]},
+  "palace-lake":       {"set": "ECardHinduPunjabiReception",    "top": 960,  "x": [250, 780]},
+  "sangeet":           {"set": "ECardHinduSangeet",             "top": 780,  "x": [0, 990]},
+  "illustrated":       {"set": "ECardIllustratedWedding",       "top": 1120, "x": [40, 990]},
+  "illustrated-night": {"set": "ECardNightReception",           "top": 1120, "x": [40, 990]},
+  "indo-caribbean":    {"set": "ECardIndoCaribbeanWedding",     "top": 1060, "x": [150, 990]},
+  "first-dance":       {"set": "ECardReceptionFirstDanceTwirl", "top": 900,  "x": [240, 970]}
+}

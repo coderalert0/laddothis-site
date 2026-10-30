@@ -2,8 +2,8 @@
 # Build the site's images from the app's own artwork and screens.
 #
 #   assets/img/art/<key>.webp        800x1000 portrait (bottom 4:5 of the e-card art)
-#   assets/img/art/<key>-thumb.webp  160x200
-#   assets/img/og/<key>.jpg          1200x630 share image
+#   assets/img/art/<key>-thumb.webp  180x180, cropped around the people
+#   assets/img/og/<key>.jpg          1200x630 share image, heads kept in
 #   assets/img/screens/<name>.webp   app screens, 600 wide (the page draws the phone frame)
 #   assets/img/ladoo-*.png           brand mark and icons
 #
@@ -25,35 +25,35 @@ SITE="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$SITE/assets/img"
 mkdir -p "$OUT/art" "$OUT/og"
 
-# site key -> e-card image set in the app
-ART=(
-  "anand-karaj:ECardSikhPunjabiAnandKarajRed"
-  "golden-temple:ECardSikhPunjabi"
-  "jaggo:ECardPunjabiJaggo"
-  "hindu-punjabi:ECardHinduPunjabiWedding"
-  "pakistani-mehndi:ECardPakistaniPunjabiMehndi"
-  "nikah:ECardPakistaniPunjabiNikah"
-  "sindhi-nikah:ECardSindhiMuslimNikah"
-  "white-gown:ECardPakistaniPunjabiWalima"
-  "garba:ECardGujaratiHinduSangeet"
-  "south-indian:ECardSouthIndianWedding"
-  "bengali:ECardBengaliHinduWedding"
-  "marathi:ECardMaharashtriHinduWedding"
-  "palace-lake:ECardHinduPunjabiReception"
-  "sangeet:ECardHinduSangeet"
-  "illustrated:ECardIllustratedWedding"
-  "illustrated-night:ECardNightReception"
-  "indo-caribbean:ECardIndoCaribbeanWedding"
-  "first-dance:ECardReceptionFirstDanceTwirl"
-)
-for pair in "${ART[@]}"; do
-  key="${pair%%:*}"; set_name="${pair#*:}"
+# Crops come from tools/art.json: per image, where the people's heads are (top) and how wide
+# the group is (x). One "key set w h x y" line per output, computed here so every crop keeps heads in.
+python3 - "$SITE/tools/art.json" > "$OUT/.crops" <<'PY'
+import json, sys
+art = {k: v for k, v in json.load(open(sys.argv[1])).items() if not k.startswith("_")}
+W, H, MARGIN = 1024, 1536, 70
+for key, a in art.items():
+    top, (x1, x2) = a["top"], a["x"]
+    # header art: bottom 4:5 of the image (1024x1280 from y=256); every top value is below 256
+    print(key, a["set"], "art", 1024, 1280, 0, 256)
+    # thumbnail: square wide enough for the group and tall enough to reach from the heads to the bottom
+    side = min(W, max(x2 - x1 + 2 * MARGIN, H - (top - MARGIN)))
+    x = max(0, min(W - side, (x1 + x2) // 2 - side // 2))
+    y = max(0, min(top - MARGIN, H - side))
+    print(key, a["set"], "thumb", side, side, x, y)
+    # share image: 1200x630 ratio across the full width, heads plus margin inside
+    h = round(W * 630 / 1200)
+    print(key, a["set"], "og", W, h, 0, max(0, min(top - MARGIN, H - h)))
+PY
+while read -r key set_name kind w h x y; do
   src="$(find "$XC/$set_name.imageset" -type f ! -name Contents.json | head -1)"
-  # The art is 1024x1536 with empty sky at the top for invitation text; keep the bottom.
-  magick "$src" -gravity south -crop 1024x1280+0+0 +repage -resize 800x1000 -quality 72 "$OUT/art/$key.webp"
-  magick "$src" -gravity south -crop 560x700+0+0 +repage -resize 160x200 -quality 72 "$OUT/art/$key-thumb.webp"
-  magick "$src" -gravity south -crop 1024x538+0+40 +repage -resize 1200x630 -quality 78 "$OUT/og/$key.jpg"
-done
+  crop=(-crop "${w}x${h}+${x}+${y}" +repage)
+  case "$kind" in
+    art)   magick "$src" "${crop[@]}" -resize 800x1000 -quality 72 "$OUT/art/$key.webp" ;;
+    thumb) magick "$src" "${crop[@]}" -resize 180x180 -quality 74 "$OUT/art/$key-thumb.webp" ;;
+    og)    magick "$src" "${crop[@]}" -resize 1200x630 -quality 78 "$OUT/og/$key.jpg" ;;
+  esac
+done < "$OUT/.crops"
+rm -f -- "$OUT/.crops"
 
 if [ -n "${SCREENS_SRC:-}" ]; then
   mkdir -p "$OUT/screens"

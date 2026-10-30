@@ -163,9 +163,9 @@ header.site nav .short-label { display: none; }
 .group h2 { display: flex; align-items: center; gap: 14px; }
 .group h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 ul.communities { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.community { display: grid; grid-template-columns: 72px 1fr; gap: 16px; align-items: center; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 12px; text-decoration: none; height: 100%; transition: border-color .2s, box-shadow .2s; }
+.community { display: grid; grid-template-columns: 84px 1fr; gap: 16px; align-items: center; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 12px; text-decoration: none; height: 100%; transition: border-color .2s, box-shadow .2s; }
 .community:hover { border-color: #e9c9a8; box-shadow: var(--shadow); }
-.community img { width: 72px; height: 90px; object-fit: cover; border-radius: 10px; }
+.community img { width: 84px; height: 84px; border-radius: 12px; }
 .community b { display: block; font-family: var(--serif); font-size: 19px; font-weight: 600; color: var(--ink); }
 .community .count { display: inline-block; font-size: 13.5px; font-weight: 600; color: var(--red-deep); margin: 2px 0 4px; }
 .community .preview { display: block; color: var(--muted); font-size: 14px; line-height: 1.45; }
@@ -187,7 +187,6 @@ footer.site .links a:hover { color: var(--red); }
   .points, .faq, ul.communities { grid-template-columns: 1fr; }
   .hero-grid { grid-template-columns: 1fr; gap: 22px; padding-top: 24px; }
   .hero-art { aspect-ratio: auto; height: 210px; order: -1; }
-  .hero-art img { object-position: 50% 85%; }
   .hero-collage { display: none; }
   .cta { grid-template-columns: 1fr; padding: 28px 24px 0; }
   .cta .phone { width: 180px; margin: 0 auto -70px; }

@@ -67,6 +67,22 @@ COMMUNITIES = {
 }
 GROUP_ORDER = ["Punjabi", "Pakistani and Muslim", "Hindu", "Jain, Parsi and Christian"]
 
+# Where the people are in each artwork (see tools/art.json); used to keep heads in the phone-width banner.
+ART = {k: v for k, v in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "art.json"))).items()
+       if not k.startswith("_")}
+
+
+def banner_focus(key):
+    """object-position (percent) for the 210px-tall phone banner cut from the 800x1000 header art.
+
+    The art is the bottom 1280px of the source (y >= 256) at 0.78125 scale; on a ~360px-wide
+    screen the banner shows about 47% of its height, so the top can move through ~53% of it.
+    Aim the banner's top edge 60px (art scale) above the heads.
+    """
+    head = (ART[key]["top"] - 256) * 0.78125
+    return round(max(0.0, min(1.0, (head - 60) / 530)) * 100)
+
+
 # community raw value -> artwork key in assets/img/art (made from the app's e-card art by tools/prep_images.sh).
 COMMUNITY_ART = {
     "Sikh Punjabi": "anand-karaj", "Hindu Punjabi": "hindu-punjabi", "Punjabi Muslim": "pakistani-mehndi",
@@ -351,7 +367,7 @@ def community_page(raw, events):
     <div class="answer"><p>A {e(name)} wedding usually moves through {len(events)} ceremonies: {e(seq)}. Below is each one in order, when it usually happens and what it means. Customs vary between families and regions, so treat this as the common sequence, not a rule.</p></div>
     <p><span class="chip">{len(events)} ceremonies</span><span class="chip">{n_tasks} checklist tasks in the app</span></p>
   </div>
-  <figure class="hero-art"><img src="{art(COMMUNITY_ART[raw])}" alt="" width="300" height="375"></figure>
+  <figure class="hero-art"><img src="{art(COMMUNITY_ART[raw])}" alt="" width="300" height="375" style="object-position: 50% {banner_focus(COMMUNITY_ART[raw])}%"></figure>
 </div></div>
 <div class="wrap narrow">
 <div class="glance">
@@ -400,7 +416,7 @@ def hub_page(data):
             evs = data[raw]
             preview = e(", ".join(ev["name"] for ev in evs[:5])) + (", &hellip;" if len(evs) > 5 else "")
             items.append(f'<li><a class="community" href="{BASE}/guides/{slug}-wedding-ceremonies/">'
-                         f'<img src="{art(COMMUNITY_ART[raw], thumb=True)}" alt="" width="72" height="90" loading="lazy">'
+                         f'<img src="{art(COMMUNITY_ART[raw], thumb=True)}" alt="" width="84" height="84" loading="lazy">'
                          f'<span><b>{e(name)}</b><span class="count">{len(evs)} ceremonies</span>'
                          f'<span class="preview">{preview}</span></span></a></li>')
         groups.append(f'<div class="group"><h2>{e(g)}</h2><ul class="communities">{"".join(items)}</ul></div>')
